@@ -1,0 +1,14 @@
+version: "3.3"
+services:
+  rabbit:
+    image: rabbitmq:3.7.3-management
+    hostname: rabbit
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+  producer:
+    build: ./producer
+    hostname: producer
+    command: tail -F /dev/null
+    links:
+      - rabbit
