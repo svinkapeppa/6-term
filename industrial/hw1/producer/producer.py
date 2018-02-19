@@ -14,7 +14,7 @@ try:
         data = input('[*] Enter your message: ')
         channel.basic_publish(exchange='',
                               routing_key='batman',
-                              body=data.encode())
+                              body=data)
         print('[x] Sent!')
 except KeyboardInterrupt:
     exit()

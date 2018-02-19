@@ -6,6 +6,12 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+  consumer:
+    build: ./consumer
+    hostname: consumer
+    command: tail -F /dev/null
+    links:
+      - rabbit
   producer:
     build: ./producer
     hostname: producer
