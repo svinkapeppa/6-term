@@ -1,0 +1,12 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+
+<h1>Detailed information</h1>
+
+<p><strong>Task description:</strong> {{ task.description }}</p>
+<p><strong>Additional information:</strong> {{ task.additional_info }}</p>
+<p class="{% if task.status == 'd' %}text-success{% else %}text-danger{% endif %}">
+    {{ task.get_status_display }}</p>
+
+{% endblock %}

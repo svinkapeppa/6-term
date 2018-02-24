@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 from django.urls import reverse
 
@@ -15,6 +16,7 @@ class Task(models.Model):
     )
 
     status = models.CharField(max_length=1, choices=TASK_STATUS, default='p', help_text='Set status of the task')
+    creator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         """
