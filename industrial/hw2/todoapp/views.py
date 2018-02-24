@@ -1,5 +1,9 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
+from django.urls import reverse_lazy
 from django.views import generic
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
 
 from .models import Task
 
@@ -21,28 +25,48 @@ def index(request):
     )
 
 
-class TaskListView(generic.ListView):
-    model = Task
-    paginate_by = 10
-
-
 class TaskDetailView(generic.DetailView):
     model = Task
 
 
-class DoneTaskListView(generic.ListView):
+class TaskByUserListView(LoginRequiredMixin, generic.ListView):
     model = Task
+    template_name = 'todoapp/task_list_user.html'
     paginate_by = 10
 
-    @staticmethod
-    def get_queryset():
-        return Task.objects.filter(status__exact='d')
+    def get_queryset(self):
+        return Task.objects.filter(creator=self.request.user)
 
 
-class PendingTaskListView(generic.ListView):
+class TaskDoneByUserListView(LoginRequiredMixin, generic.ListView):
     model = Task
+    template_name = 'todoapp/task_done_list_user.html'
     paginate_by = 10
 
-    @staticmethod
-    def get_queryset():
-        return Task.objects.filter(status__exact='p')
+    def get_queryset(self):
+        return Task.objects.filter(creator=self.request.user).filter(status__exact='d')
+
+
+class TaskPendingByUserListView(LoginRequiredMixin, generic.ListView):
+    model = Task
+    template_name = 'todoapp/task_pending_list_user.html'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Task.objects.filter(creator=self.request.user).filter(status__exact='p')
+
+
+class TaskCreate(CreateView):
+    model = Task
+    fields = '__all__'
+    initial = {'status': 'p', }
+
+
+class TaskUpdate(UpdateView):
+    model = Task
+    fields = ['description', 'additional_info', 'status', 'creator']
+
+
+class TaskDelete(DeleteView):
+    model = Task
+    success_url = reverse_lazy('index')
