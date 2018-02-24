@@ -11,4 +11,5 @@ urlpatterns = [
     path('task/create/', views.TaskCreate.as_view(), name='task_create'),
     path('task/(?P<pk>\d+)/update/', views.TaskUpdate.as_view(), name='task_update'),
     path('task/(?P<pk>\d+)/delete/', views.TaskDelete.as_view(), name='task_delete'),
+    path('signup/', views.signup, name='signup')
 ]

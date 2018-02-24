@@ -28,7 +28,8 @@
                     <li><a href="{% url 'all' %}">All tasks</a></li>
                     <li><a href="{% url 'done' %}">Done tasks</a></li>
                     <li><a href="{% url 'pending' %}">Pending tasks</a></li>
-                    <li><a href="{% url 'logout'%}?next={{request.path}}">Logout</a></li>
+                    <li><a href="{% url 'task_create' %}">Create task</a></li>
+                    <li><a href="{% url 'logout'%}?next={{index}}">Logout</a></li>
                 {% else %}
                     <li><a href="{% url 'login'%}?next={{request.path}}">Login</a></li>
                 {% endif %}
