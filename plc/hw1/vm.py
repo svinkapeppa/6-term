@@ -27,31 +27,83 @@ class Interpreter:
     def sp(self):
         return self.memory.read(cfg.SP_INDEX)
 
-    def next(self, offset):
-        self.memory.write(cfg.IP_INDEX, self.ip() + offset)
+    def next(self):
+        self.memory.write(cfg.IP_INDEX, self.ip() + cfg.IP_OFFSET)
 
-    def handle(self, command, first_arg, second_arg):
-        if command == cfg.COMMAND_READ:
-            value = input()
-            self.memory.write(first_arg, value)
-            self.next(3)
+    def dereference(self, lvl, value):
+        for i in range(lvl):
+            value = self.memory.read(value)
+        return value
+
+    def add(self, first_lvl, first_arg, second_lvl, second_arg):
+        value = self.memory.read(self.dereference(first_lvl, first_arg)) + \
+                self.memory.read(self.dereference(second_lvl, second_arg))
+        self.memory.write(self.dereference(first_lvl, first_arg), value)
+
+    def mov(self, first_lvl, first_arg, second_lvl, second_arg):
+        value = self.memory.read(self.dereference(second_lvl, second_arg))
+        self.memory.write(self.dereference(first_lvl, first_arg), value)
+
+    def print(self, first_lvl, first_arg):
+        print(self.memory.read(self.dereference(first_lvl, first_arg)))
+
+    def read(self, first_lvl, first_arg):
+        value = input()
+        self.memory.write(self.dereference(first_lvl, first_arg), value)
+
+    def sub(self, first_lvl, first_arg, second_lvl, second_arg):
+        value = self.memory.read(self.dereference(first_lvl, first_arg)) - \
+                self.memory.read(self.dereference(second_lvl, second_arg))
+        self.memory.write(self.dereference(first_lvl, first_arg), value)
+
+    def handle(self, command, first_lvl, first_arg, second_lvl, second_arg):
+        if command == cfg.COMMAND_ADD:
+            self.add(first_lvl, first_arg, second_lvl, second_arg)
+            self.next()
+            return True
+        elif command == cfg.COMMAND_CALL:
+            return True
+        elif command == cfg.COMMAND_EXIT:
+            return False
+        elif command == cfg.COMMAND_FUNCB:
+            return True
+        elif command == cfg.COMMAND_FUNCE:
+            return True
+        elif command == cfg.COMMAND_GOTO:
+            return True
+        elif command == cfg.COMMAND_MOV:
+            self.mov(first_lvl, first_arg, second_lvl, second_arg)
+            self.next()
+            return True
+        elif command == cfg.COMMAND_POP:
+            return True
+        elif command == cfg.COMMAND_PRINT:
+            self.print(first_lvl, first_arg)
+            self.next()
+            return True
+        elif command == cfg.COMMAND_PUSH:
             return True
         elif command == cfg.COMMAND_PUTSTR:
-            string = chr(second_arg)
-            for i in range(3, first_arg + 2):
-                string += chr(self.memory.read(self.ip() + i))
-            print(string)
-            self.next(first_arg + 2)
+            return True
+        elif command == cfg.COMMAND_READ:
+            self.read(first_lvl, first_arg)
+            self.next()
+            return True
+        elif command == cfg.COMMAND_SUB:
+            self.sub(first_lvl, first_arg, second_lvl, second_arg)
+            self.next()
             return True
         else:
             return False
 
     def _run(self):
         command = self.memory.read(self.ip())
-        first_arg = self.memory.read(self.ip() + 1)
-        second_arg = self.memory.read(self.ip() + 2)
+        first_lvl = self.memory.read(self.ip() + 1)
+        first_arg = self.memory.read(self.ip() + 2)
+        second_lvl = self.memory.read(self.ip() + 3)
+        second_arg = self.memory.read(self.ip() + 4)
 
-        return self.handle(command, first_arg, second_arg)
+        return self.handle(command, first_lvl, first_arg, second_lvl, second_arg)
 
     def run(self):
         while self._run():
@@ -66,7 +118,7 @@ def main():
         memory.write(cfg.IP_INDEX, cfg.NUMBER_OF_REGISTERS)
         memory.write(cfg.SP_INDEX, cfg.MEMORY_SIZE)
 
-        bytecode = np.fromfile(sys.argv[1], dtype=np.int32)[::2]
+        bytecode = np.fromfile(sys.argv[1], dtype=np.int32)
 
         for i, byte in enumerate(bytecode):
             memory.write(cfg.NUMBER_OF_REGISTERS + i, byte)
