@@ -1,4 +1,3 @@
-#!/usr/env/bin python3
 import sys
 
 import numpy as np
@@ -52,11 +51,16 @@ class Interpreter:
     def funce(self):
         self.reading_function = False
 
+    def goto(self, first_lvl, first_arg, second_lvl, second_arg):
+        if self.dereference(first_lvl, first_arg) != second_lvl:
+            self.add(1, cfg.IP_INDEX, 0, (second_arg - 1) * cfg.IP_OFFSET)
+
     def mov(self, first_lvl, first_arg, second_lvl, second_arg):
         value = self.dereference(second_lvl, second_arg)
         self.memory.write(self.dereference(first_lvl - 1, first_arg), value)
 
     def pop(self):
+        self.memory.write(self.sp(), 0)
         self.add(1, cfg.SP_INDEX, 0, 1)
 
     def print(self, first_lvl, first_arg):
@@ -98,6 +102,8 @@ class Interpreter:
             self.funce()
             return True
         elif command == cfg.COMMAND_GOTO:
+            self.next()
+            self.goto(first_lvl, first_arg, second_lvl, second_arg)
             return True
         elif command == cfg.COMMAND_MOV:
             self.next()
@@ -130,6 +136,7 @@ class Interpreter:
 
     def _run(self):
         command = self.memory.read(self.ip())
+        print('command', command)
         first_lvl = self.memory.read(self.ip() + 1)
         first_arg = self.memory.read(self.ip() + 2)
         second_lvl = self.memory.read(self.ip() + 3)
