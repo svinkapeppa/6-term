@@ -20,6 +20,8 @@ class Memory:
 class Interpreter:
     def __init__(self, memory):
         self.memory = memory
+        self.function_startpoint = {}
+        self.reading_function = False
 
     def ip(self):
         return self.memory.read(cfg.IP_INDEX)
@@ -36,62 +38,92 @@ class Interpreter:
         return value
 
     def add(self, first_lvl, first_arg, second_lvl, second_arg):
-        value = self.memory.read(self.dereference(first_lvl, first_arg)) + \
-                self.memory.read(self.dereference(second_lvl, second_arg))
-        self.memory.write(self.dereference(first_lvl, first_arg), value)
+        value = self.dereference(first_lvl, first_arg) + self.dereference(second_lvl, second_arg)
+        self.memory.write(self.dereference(first_lvl - 1, first_arg), value)
+
+    def call(self, first_arg):
+        self.push(0, self.ip())
+        self.mov(1, cfg.IP_INDEX, 0, self.function_startpoint[first_arg])
+
+    def funcb(self, first_arg):
+        self.reading_function = True
+        self.function_startpoint[first_arg] = self.ip()
+
+    def funce(self):
+        self.reading_function = False
 
     def mov(self, first_lvl, first_arg, second_lvl, second_arg):
-        value = self.memory.read(self.dereference(second_lvl, second_arg))
-        self.memory.write(self.dereference(first_lvl, first_arg), value)
+        value = self.dereference(second_lvl, second_arg)
+        self.memory.write(self.dereference(first_lvl - 1, first_arg), value)
+
+    def pop(self):
+        self.add(1, cfg.SP_INDEX, 0, 1)
 
     def print(self, first_lvl, first_arg):
-        print(self.memory.read(self.dereference(first_lvl, first_arg)))
+        print(self.dereference(first_lvl, first_arg))
+
+    def push(self, first_lvl, first_arg):
+        self.sub(1, cfg.SP_INDEX, 0, 1)
+        self.mov(2, cfg.SP_INDEX, first_lvl, first_arg)
 
     def read(self, first_lvl, first_arg):
         value = input()
-        self.memory.write(self.dereference(first_lvl, first_arg), value)
+        self.memory.write(self.dereference(first_lvl - 1, first_arg), value)
 
     def sub(self, first_lvl, first_arg, second_lvl, second_arg):
-        value = self.memory.read(self.dereference(first_lvl, first_arg)) - \
-                self.memory.read(self.dereference(second_lvl, second_arg))
-        self.memory.write(self.dereference(first_lvl, first_arg), value)
+        value = self.dereference(first_lvl, first_arg) - self.dereference(second_lvl, second_arg)
+        self.memory.write(self.dereference(first_lvl - 1, first_arg), value)
 
     def handle(self, command, first_lvl, first_arg, second_lvl, second_arg):
-        if command == cfg.COMMAND_ADD:
-            self.add(first_lvl, first_arg, second_lvl, second_arg)
+        if self.reading_function and command != cfg.COMMAND_FUNCE:
             self.next()
             return True
+
+        if command == cfg.COMMAND_ADD:
+            self.next()
+            self.add(first_lvl, first_arg, second_lvl, second_arg)
+            return True
         elif command == cfg.COMMAND_CALL:
+            self.next()
+            self.call(first_arg)
             return True
         elif command == cfg.COMMAND_EXIT:
             return False
         elif command == cfg.COMMAND_FUNCB:
+            self.next()
+            self.funcb(first_arg)
             return True
         elif command == cfg.COMMAND_FUNCE:
+            self.next()
+            self.funce()
             return True
         elif command == cfg.COMMAND_GOTO:
             return True
         elif command == cfg.COMMAND_MOV:
-            self.mov(first_lvl, first_arg, second_lvl, second_arg)
             self.next()
+            self.mov(first_lvl, first_arg, second_lvl, second_arg)
             return True
         elif command == cfg.COMMAND_POP:
+            self.next()
+            self.pop()
             return True
         elif command == cfg.COMMAND_PRINT:
-            self.print(first_lvl, first_arg)
             self.next()
+            self.print(first_lvl, first_arg)
             return True
         elif command == cfg.COMMAND_PUSH:
+            self.next()
+            self.push(first_lvl, first_arg)
             return True
         elif command == cfg.COMMAND_PUTSTR:
             return True
         elif command == cfg.COMMAND_READ:
-            self.read(first_lvl, first_arg)
             self.next()
+            self.read(first_lvl, first_arg)
             return True
         elif command == cfg.COMMAND_SUB:
-            self.sub(first_lvl, first_arg, second_lvl, second_arg)
             self.next()
+            self.sub(first_lvl, first_arg, second_lvl, second_arg)
             return True
         else:
             return False
@@ -126,7 +158,7 @@ def main():
         interpreter = Interpreter(memory)
         interpreter.run()
 
-        print(memory.memory)
+        print(interpreter.memory.memory)
 
 
 if __name__ == '__main__':
