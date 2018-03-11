@@ -1,10 +1,13 @@
 NUMBER_OF_REGISTERS = 8
-MEMORY_SIZE = 400
+MEMORY_SIZE = 500
 
 IP_INDEX = 0
 SP_INDEX = 1
 
 IP_OFFSET = 5
+
+REGISTERS = {'ip': 0, 'sp': 1, 'ax': 2, 'bx': 3,
+             'cx': 4, 'dx': 5, 'ex': 6, 'fx': 7}
 
 COMMAND_ADD = 0
 COMMAND_CALL = 1
@@ -20,5 +23,16 @@ COMMAND_PUTSTR = 10
 COMMAND_READ = 11
 COMMAND_SUB = 12
 
-DESCRIPTION = 'This program calculates the n-th number in fibonacci sequence [1, 1, 2, 3, 5, 8, ...].'
-ENTER = 'Enter a number:'
+STR_ADD = 'add'
+STR_CALL = 'call'
+STR_EXIT = 'exit'
+STR_FUNCB = 'funcb'
+STR_FUNCE = 'funce'
+STR_GOTO = 'goto'
+STR_MOV = 'mov'
+STR_POP = 'pop'
+STR_PRINT = 'print'
+STR_PUSH = 'push'
+STR_PUTSTR = 'putstr'
+STR_READ = 'read'
+STR_SUB = 'sub'

@@ -17,8 +17,9 @@ class Memory:
 
 
 class Interpreter:
-    def __init__(self, memory):
+    def __init__(self, memory, static_offset):
         self.memory = memory
+        self.static_offset = static_offset
         self.function_startpoint = {}
         self.reading_function = False
 
@@ -69,6 +70,12 @@ class Interpreter:
     def push(self, first_lvl, first_arg):
         self.sub(1, cfg.SP_INDEX, 0, 1)
         self.mov(2, cfg.SP_INDEX, first_lvl, first_arg)
+
+    def putstr(self, first_lvl, first_arg):
+        string = ''
+        for i in range(first_arg):
+            string += chr(self.memory.read(cfg.NUMBER_OF_REGISTERS + self.static_offset + first_lvl + i))
+        print(string)
 
     def read(self, first_lvl, first_arg):
         value = input()
@@ -122,6 +129,8 @@ class Interpreter:
             self.push(first_lvl, first_arg)
             return True
         elif command == cfg.COMMAND_PUTSTR:
+            self.next()
+            self.putstr(first_lvl, first_arg)
             return True
         elif command == cfg.COMMAND_READ:
             self.next()
@@ -136,7 +145,6 @@ class Interpreter:
 
     def _run(self):
         command = self.memory.read(self.ip())
-        print('command', command)
         first_lvl = self.memory.read(self.ip() + 1)
         first_arg = self.memory.read(self.ip() + 2)
         second_lvl = self.memory.read(self.ip() + 3)
@@ -154,18 +162,16 @@ def main():
         print('Usage: vm.py <file>')
     else:
         memory = Memory(cfg.MEMORY_SIZE)
-        memory.write(cfg.IP_INDEX, cfg.NUMBER_OF_REGISTERS)
+        memory.write(cfg.IP_INDEX, cfg.NUMBER_OF_REGISTERS + 1)
         memory.write(cfg.SP_INDEX, cfg.MEMORY_SIZE)
 
-        bytecode = np.fromfile(sys.argv[1], dtype=np.int32)
+        bytecode = np.fromfile(sys.argv[1], dtype=np.int32)[::2]
 
         for i, byte in enumerate(bytecode):
             memory.write(cfg.NUMBER_OF_REGISTERS + i, byte)
 
-        interpreter = Interpreter(memory)
+        interpreter = Interpreter(memory, bytecode[0])
         interpreter.run()
-
-        print(interpreter.memory.memory)
 
 
 if __name__ == '__main__':
