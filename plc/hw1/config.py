@@ -9,6 +9,9 @@ IP_OFFSET = 5
 REGISTERS = {'ip': 0, 'sp': 1, 'ax': 2, 'bx': 3,
              'cx': 4, 'dx': 5, 'ex': 6, 'fx': 7}
 
+REGISTERS_REVERSE = {0: 'ip', 1: 'sp', 2: 'ax', 3: 'bx',
+                     4: 'cx', 5: 'dx', 6: 'ex', 7: 'fx'}
+
 COMMAND_ADD = 0
 COMMAND_CALL = 1
 COMMAND_EXIT = 2

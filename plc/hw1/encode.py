@@ -6,14 +6,15 @@ import config as cfg
 
 
 class Encoder:
-    def __init__(self, input, output):
+    def __init__(self, _input, output):
         self.offset = 0
-        self.input = input
+        self.input = _input
         self.output = output
         self.program = np.array([], dtype=np.int32)
         self.static = np.array([], dtype=np.int32)
 
-    def get_arguments(self, word):
+    @staticmethod
+    def get_arguments(word):
         lvl = 0
 
         for char in word:
@@ -23,7 +24,7 @@ class Encoder:
                 arg = word[lvl:]
                 try:
                     arg = int(arg)
-                except Exception:
+                except ValueError:
                     arg = cfg.REGISTERS[arg]
                 return lvl, arg
 
@@ -32,18 +33,22 @@ class Encoder:
         second_lvl, second_arg = self.get_arguments(words[2])
         return np.array([cfg.COMMAND_ADD, first_lvl, first_arg, second_lvl, second_arg])
 
-    def call(self, words):
+    @staticmethod
+    def call(words):
         label = hash(words[1])
         return np.array([cfg.COMMAND_CALL, 0, label, 0, 0])
 
-    def exit(self, words):
+    @staticmethod
+    def exit():
         return np.array([cfg.COMMAND_EXIT, 0, 0, 0, 0])
 
-    def funcb(self, words):
+    @staticmethod
+    def funcb(words):
         label = hash(words[1])
         return np.array([cfg.COMMAND_FUNCB, 0, label, 0, 0])
 
-    def funce(self, words):
+    @staticmethod
+    def funce():
         return np.array([cfg.COMMAND_FUNCE, 0, 0, 0, 0])
 
     def goto(self, words):
@@ -56,7 +61,8 @@ class Encoder:
         second_lvl, second_arg = self.get_arguments(words[2])
         return np.array([cfg.COMMAND_MOV, first_lvl, first_arg, second_lvl, second_arg])
 
-    def pop(self, words):
+    @staticmethod
+    def pop():
         return np.array([cfg.COMMAND_POP, 0, 0, 0, 0])
 
     def print(self, words):
@@ -93,17 +99,17 @@ class Encoder:
         elif words[0] == cfg.STR_CALL:
             return self.call(words)
         elif words[0] == cfg.STR_EXIT:
-            return self.exit(words)
+            return self.exit()
         elif words[0] == cfg.STR_FUNCB:
             return self.funcb(words)
         elif words[0] == cfg.STR_FUNCE:
-            return self.funce(words)
+            return self.funce()
         elif words[0] == cfg.STR_GOTO:
             return self.goto(words)
         elif words[0] == cfg.STR_MOV:
             return self.mov(words)
         elif words[0] == cfg.STR_POP:
-            return self.pop(words)
+            return self.pop()
         elif words[0] == cfg.STR_PRINT:
             return self.print(words)
         elif words[0] == cfg.STR_PUSH:
