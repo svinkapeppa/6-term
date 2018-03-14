@@ -1,4 +1,4 @@
-funcb -1688265053
+funcb 0
 mov *ex **sp
 pop
 mov *ax **sp
@@ -16,7 +16,7 @@ push *ex
 push *fx
 push *bx
 push *ax
-call -1688265053
+call 0
 mov *ax **sp
 pop
 mov *bx **sp
@@ -36,7 +36,7 @@ read *ax
 push *ax
 push 1
 push 0
-call -1688265053
+call 0
 mov *ax **sp
 pop
 mov *bx **sp

@@ -124,11 +124,11 @@ class Decoder:
         limit = int((self.offset - 1) / cfg.IP_OFFSET)
 
         for i in range(limit):
-            command = data[cfg.IP_OFFSET * i + 1]
-            first_lvl = data[cfg.IP_OFFSET * i + 2]
-            first_arg = data[cfg.IP_OFFSET * i + 3]
-            second_lvl = data[cfg.IP_OFFSET * i + 4]
-            second_arg = data[cfg.IP_OFFSET * i + 5]
+            command = data[cfg.IP_OFFSET * i + 2]
+            first_lvl = data[cfg.IP_OFFSET * i + 3]
+            first_arg = data[cfg.IP_OFFSET * i + 4]
+            second_lvl = data[cfg.IP_OFFSET * i + 5]
+            second_arg = data[cfg.IP_OFFSET * i + 6]
 
             string = self.handle(data, command, first_lvl,
                                  first_arg, second_lvl, second_arg)

@@ -7,11 +7,14 @@ import config as cfg
 
 class Encoder:
     def __init__(self, _input, output):
-        self.offset = 0
+        self.static_offset = 0
+        self.functions_offset = 0
         self.input = _input
         self.output = output
         self.program = np.array([], dtype=np.int32)
         self.static = np.array([], dtype=np.int32)
+        self.functions = {}
+        self.functions_startpoints = np.array([], dtype=np.int32)
 
     @staticmethod
     def get_arguments(word):
@@ -33,18 +36,18 @@ class Encoder:
         second_lvl, second_arg = self.get_arguments(words[2])
         return np.array([cfg.COMMAND_ADD, first_lvl, first_arg, second_lvl, second_arg])
 
-    @staticmethod
-    def call(words):
-        label = hash(words[1])
+    def call(self, words):
+        label = self.functions[words[1]]
         return np.array([cfg.COMMAND_CALL, 0, label, 0, 0])
 
     @staticmethod
     def exit():
         return np.array([cfg.COMMAND_EXIT, 0, 0, 0, 0])
 
-    @staticmethod
-    def funcb(words):
-        label = hash(words[1])
+    def funcb(self, i, words):
+        label = len(self.functions)
+        self.functions[words[1]] = label
+        self.functions_startpoints = np.append(self.functions_startpoints, (i + 1) * cfg.IP_OFFSET)
         return np.array([cfg.COMMAND_FUNCB, 0, label, 0, 0])
 
     @staticmethod
@@ -78,9 +81,9 @@ class Encoder:
         code = np.array([], dtype=np.int32)
         for char in words:
             code = np.append(code, ord(char))
-        self.offset += len(words)
+        self.static_offset += len(words)
         self.static = np.append(self.static, code)
-        return np.array([cfg.COMMAND_PUTSTR, self.offset - len(words), len(words), 0, 0])
+        return np.array([cfg.COMMAND_PUTSTR, self.static_offset - len(words), len(words), 0, 0])
 
     def read(self, words):
         first_lvl, first_arg = self.get_arguments(words[1])
@@ -91,7 +94,7 @@ class Encoder:
         second_lvl, second_arg = self.get_arguments(words[2])
         return np.array([cfg.COMMAND_SUB, first_lvl, first_arg, second_lvl, second_arg])
 
-    def handle(self, line):
+    def handle(self, i, line):
         words = line.split()
 
         if words[0] == cfg.STR_ADD:
@@ -101,7 +104,7 @@ class Encoder:
         elif words[0] == cfg.STR_EXIT:
             return self.exit()
         elif words[0] == cfg.STR_FUNCB:
-            return self.funcb(words)
+            return self.funcb(i, words)
         elif words[0] == cfg.STR_FUNCE:
             return self.funce()
         elif words[0] == cfg.STR_GOTO:
@@ -126,13 +129,18 @@ class Encoder:
     def encode(self):
         file = open(self.input, 'r')
 
+        i = 0
         for line in file:
-            code = self.handle(line)
+            code = self.handle(i, line)
             self.program = np.append(self.program, code)
+            i += 1
 
-        length = len(self.program) + 1
+        static_offset = len(self.program) + 2
+        functions_offset = static_offset + len(self.static)
 
-        self.program = np.array([length, ] + list(self.program) + list(self.static))
+        self.program = np.array([static_offset, functions_offset] +
+                                list(self.program) + list(self.static) +
+                                list(self.functions_startpoints))
 
         self.program.tofile(self.output)
 

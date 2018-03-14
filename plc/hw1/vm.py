@@ -17,11 +17,8 @@ class Memory:
 
 
 class Interpreter:
-    def __init__(self, memory, static_offset):
+    def __init__(self, memory):
         self.memory = memory
-        self.static_offset = static_offset
-        self.function_startpoint = {}
-        self.reading_function = False
 
     def ip(self):
         return self.memory.read(cfg.IP_INDEX)
@@ -43,14 +40,16 @@ class Interpreter:
 
     def call(self, first_arg):
         self.push(0, self.ip())
-        self.mov(1, cfg.IP_INDEX, 0, self.function_startpoint[first_arg])
+        start_point = cfg.NUMBER_OF_REGISTERS + 3 + \
+                      self.memory.read(cfg.NUMBER_OF_REGISTERS + 1 + first_arg +
+                                       self.memory.read(cfg.NUMBER_OF_REGISTERS + 2))
+        self.mov(1, cfg.IP_INDEX, 0, start_point)
 
-    def funcb(self, first_arg):
-        self.reading_function = True
-        self.function_startpoint[first_arg] = self.ip()
+    def funcb(self):
+        self.memory.write(cfg.NUMBER_OF_REGISTERS, 1)
 
     def funce(self):
-        self.reading_function = False
+        self.memory.write(cfg.NUMBER_OF_REGISTERS, 0)
 
     def goto(self, first_lvl, first_arg, second_lvl, second_arg):
         if self.dereference(first_lvl, first_arg) != second_lvl:
@@ -74,7 +73,9 @@ class Interpreter:
     def putstr(self, first_lvl, first_arg):
         string = ''
         for i in range(first_arg):
-            string += chr(self.memory.read(cfg.NUMBER_OF_REGISTERS + self.static_offset + first_lvl + i))
+            string += chr(self.memory.read(cfg.NUMBER_OF_REGISTERS + 1 +
+                                           self.memory.read(cfg.NUMBER_OF_REGISTERS + 1) +
+                                           first_lvl + i))
         print(string)
 
     def read(self, first_lvl, first_arg):
@@ -86,7 +87,7 @@ class Interpreter:
         self.memory.write(self.dereference(first_lvl - 1, first_arg), value)
 
     def handle(self, command, first_lvl, first_arg, second_lvl, second_arg):
-        if self.reading_function and command != cfg.COMMAND_FUNCE:
+        if self.memory.read(cfg.NUMBER_OF_REGISTERS) and command != cfg.COMMAND_FUNCE:
             self.next()
             return True
 
@@ -102,7 +103,7 @@ class Interpreter:
             return False
         elif command == cfg.COMMAND_FUNCB:
             self.next()
-            self.funcb(first_arg)
+            self.funcb()
             return True
         elif command == cfg.COMMAND_FUNCE:
             self.next()
@@ -162,15 +163,16 @@ def main():
         print('Usage: vm.py <file>')
     else:
         memory = Memory(cfg.MEMORY_SIZE)
-        memory.write(cfg.IP_INDEX, cfg.NUMBER_OF_REGISTERS + 1)
+        memory.write(cfg.IP_INDEX, cfg.NUMBER_OF_REGISTERS + 3)
         memory.write(cfg.SP_INDEX, cfg.MEMORY_SIZE)
+        memory.write(cfg.NUMBER_OF_REGISTERS, 0)
 
         bytecode = np.fromfile(sys.argv[1], dtype=np.int32)[::2]
 
         for i, byte in enumerate(bytecode):
-            memory.write(cfg.NUMBER_OF_REGISTERS + i, byte)
+            memory.write(cfg.NUMBER_OF_REGISTERS + i + 1, byte)
 
-        interpreter = Interpreter(memory, bytecode[0])
+        interpreter = Interpreter(memory)
         interpreter.run()
 
 
