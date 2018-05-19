@@ -71,9 +71,9 @@ class Mesh:
             Output: laplacian <scipy.sparse.coo_matrix> - laplacian matrix
         """
         neighbors = np.zeros(self.n)
-        data = np.array([])
-        row = np.array([])
-        column = np.array([])
+        data = []
+        row = []
+        column = []
         seen = set()
         
         # Precalculate N(i) for each vertex
@@ -84,50 +84,50 @@ class Mesh:
             neighbors[c] += 1
         
         # Diagonal elements
-        data = -1 * np.ones(self.n)
-        row = np.arange(self.n)
-        column = np.arange(self.n)    
+        data = [-1] * self.n
+        row = list(range(self.n))
+        column = list(range(self.n))   
         
         # Build laplacian operator
         for face in self.faces:
             a, b, c = face
             if (a, b) not in seen:
-                data = np.append(data, 1 / neighbors[a])
-                row = np.append(row, a)
-                column = np.append(column, b)
+                data.append(1 / neighbors[a])
+                row.append(a)
+                column.append(b)
                 seen.add((a, b))
             if (a, c) not in seen:
-                data = np.append(data, 1 / neighbors[a])
-                row = np.append(row, a)
-                column = np.append(column, c)
+                data.append(1 / neighbors[a])
+                row.append(a)
+                column.append(c)
                 seen.add((a, c))
             if (b, a) not in seen:
-                data = np.append(data, 1 / neighbors[b])
-                row = np.append(row, b)
-                column = np.append(column, a)
+                data.append(1 / neighbors[b])
+                row.append(b)
+                column.append(a)
                 seen.add((b, a))
             if (b, c) not in seen:
-                data = np.append(data, 1 / neighbors[b])
-                row = np.append(row, b)
-                column = np.append(column, c)
+                data.append(1 / neighbors[b])
+                row.append(b)
+                column.append(c)
                 seen.add((b, c))
             if (c, a) not in seen:
-                data = np.append(data, 1 / neighbors[c])
-                row = np.append(row, c)
-                column = np.append(column, a)
+                data.append(1 / neighbors[c])
+                row.append(c)
+                column.append(a)
                 seen.add((c, a))
             if (c, b) not in seen:
-                data = np.append(data, 1 / neighbors[c])
-                row = np.append(row, c)
-                column = np.append(column, b)
+                data.append(1 / neighbors[c])
+                row.append(c)
+                column.append(b)
                 seen.add((c, b))
         L = coo_matrix((data, (row, column)))
         
         # Anchors
         if anchors is not None:
-            data = anchor_weight * np.ones(len(anchors))
-            row = np.arange(len(anchors))
-            column = np.array(anchors)
+            data = [anchor_weight] * len(anchors)
+            row = list(range(len(anchors)))
+            column = anchors
             end = coo_matrix((data, (row, column)), shape=(len(anchors), self.n))
             return vstack([L, end])
         else:
